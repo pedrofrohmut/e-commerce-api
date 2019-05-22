@@ -1,0 +1,7 @@
+﻿CREATE TABLE dbo.CartItem
+(
+  Id INT NOT NULL PRIMARY KEY IDENTITY,
+  ProductId INT NOT NULL REFERENCES dbo.Product(Id),
+  CartId INT NOT NULL REFERENCES dbo.Cart(Id),
+  Quantity INT NULL DEFAULT 1
+)
