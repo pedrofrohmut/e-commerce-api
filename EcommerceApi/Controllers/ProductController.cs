@@ -1,57 +1,67 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+/* using Microsoft.AspNetCore.Http; // HttpMessages */
 using System.Collections.Generic;
-using System.Linq;
-using EcommerceApi.Models;
 
-namespace EcommerceApi.Controllers
-{
+using EcommerceApi.Models;
+using EcommerceApi.Daos;
+using EcommerceApi.Util;
+
+namespace EcommerceApi.Controllers {
+
   [Route("api/[controller]")]
   [ApiController]
-  public class ProductController: ControllerBase
-  {
-    private readonly List<ProductModel> products = new List<ProductModel>();
+  public class ProductController: ControllerBase {
+    
+    private readonly AppDb Db;
 
-    public ProductController() {
-      products.Add(new ProductModel() { Id=1, Title="prod1", Img="Img1", Price=123, Company="Company1", Info="Here is the product info" });
-      products.Add(new ProductModel() { Id=2, Title="prod2", Img="Img2", Price=223, Company="Company2", Info="Here is the product info" });
-      products.Add(new ProductModel() { Id=3, Title="prod3", Img="Img3", Price=323, Company="Company3", Info="Here is the product info" });
-      products.Add(new ProductModel() { Id=4, Title="prod4", Img="Img4", Price=423, Company="Company4", Info="Here is the product info" });
+    public ProductController(AppDb db) {
+      this.Db = db;
     }
 
     // GET api/product
-    [Route("")]
     [HttpGet]
-    public ActionResult<List<ProductModel>> GetAllProducts() {
-      return this.products;
+    public ActionResult<IEnumerable<Product>> GetAllProducts() {
+      var dao = new ProductDao(this.Db.Connection);
+      var products = dao.FindAll();
+      return Ok(products);
     }
 
-    // GET api/product/5
-    [Route("{id}")]
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public ActionResult<ProductModel> GetById(int id) {
-      ProductModel product = products.Find(p => p.Id == id);
-      if (product == null) return BadRequest();
-      return product;
+    // GET api/product/{id}
+    [HttpGet("{id}")]
+    public ActionResult<Product> GetOneProduct(int id) {
+      var dao = new ProductDao(this.Db.Connection);
+      var product = dao.FindOneById(id);
+      if (product == null) {
+        return BadRequest();
+      }
+      return Ok(product);
     }
 
     // POST api/product
-    [Route("{id}")]
     [HttpPost]
-    public void CreateProduct([FromBody] ProductModel product) {
+    public ActionResult<Product> PostProduct([FromBody] Product product) {
+      var dao = new ProductDao(this.Db.Connection);
+      var productId = dao.Create(product);
+      return CreatedAtAction("GetOneProduct", 
+          new Product() { Id = productId }, product);
     }
 
-    // PUT api/product/5
-    [Route("{id}")]
-    [HttpPut]
-    public void UpdateProduct(int id, [FromBody] ProductModel product) {
-    }
+    /* // POST api/product */
+    /* [Route("{id}")] */
+    /* [HttpPost] */
+    /* public void CreateProduct([FromBody] ProductModel product) { */
+    /* } */
 
-    // DELETE api/product/5
-    [Route("{id}")]
-    [HttpDelete]
-    public void RemoveProduct(int id) {
-    }
+    /* // PUT api/product/5 */
+    /* [Route("{id}")] */
+    /* [HttpPut] */
+    /* public void UpdateProduct(int id, [FromBody] ProductModel product) { */
+    /* } */
+
+    /* // DELETE api/product/5 */
+    /* [Route("{id}")] */
+    /* [HttpDelete] */
+    /* public void RemoveProduct(int id) { */
+    /* } */
   }
 }
